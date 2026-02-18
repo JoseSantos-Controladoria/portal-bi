@@ -1,0 +1,45 @@
+version: '3'
+
+services:
+  # mce_postgres:
+  #   build: .docker/postgres
+  #   container_name: mce_postgres_container
+  #   restart: always
+  #   tty: true
+  #   environment:
+  #     - POSTGRES_PASSWORD=root
+  #     - POSTGRES_DB=popup
+  #   volumes:
+  #     - .docker/postgres/db:/var/lib/postgresql/data
+  #   networks:
+  #     - rede-mce
+  
+  # mce_pgadmin:
+  #   image: dpage/pgadmin4
+  #   container_name: mce_pgadmin_container
+  #   tty: true
+  #   environment:
+  #     - PGADMIN_DEFAULT_EMAIL=admin@admin.com
+  #     - PGADMIN_DEFAULT_PASSWORD=123456
+  #   ports:
+  #     - 3003:80
+  #   depends_on:
+  #     - popup_postgres
+  #   extra_hosts:
+  #     - "host.docker.internal:172.17.0.1"
+  #   networks:
+  #     - rede-mce
+
+  mce_app:
+    build: .
+    container_name: mce_api_container
+    volumes:
+      - .:/home/node/app
+    ports:
+      - 3000:3000
+    networks:
+      - rede-mce
+
+networks:
+  rede-mce:
+    driver: bridge

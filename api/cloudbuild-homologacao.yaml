@@ -1,0 +1,4 @@
+steps:
+  - name: "gcr.io/cloud-builders/docker"
+    args: ["build", "-t", "gcr.io/grupotrademark/mce-api-homologacao", "."]
+images: ["gcr.io/grupotrademark/mce-api-homologacao:latest"]
