@@ -326,49 +326,69 @@ exports.updateItem = async (req, res) => {
 
     for (nField=0; nField<=aFields.length-1; nField++) {
 
+      // Pega o ID para usar no WHERE depois
       if (aFields[nField][0].toUpperCase() == 'ID') {
         nIDItem = aFields[nField][1];
       }
       else {
+        // --- PROTEÇÃO DE SENHA (Correção 2) ---
+        // Se for a tabela 'user' e o campo for 'password', mas o valor estiver vazio,
+        // nós PULAMOS essa atualização para não zerar a senha atual.
+        if (req.query.tablename.toLowerCase() === 'user' && 
+            aFields[nField][0].toLowerCase() === 'password' && 
+            !aFields[nField][1]) { 
+            continue; 
+        }
+        // --------------------------------------
+
         nSeqField++
         cFields += ` "${aFields[nField][0]}" = $${nSeqField}, ` ; 
         aParamsUpdate.push( aFields[nField][1] );
       }
     }
     
+    // Remove a última vírgula extra, se houver, e adiciona o update de data
+    if (cFields.endsWith(', ')) {
+        cFields = cFields.slice(0, -2) + ', '; 
+    }
     cFields += ` last_update = now() `
 
     if (nIDItem == -1) {
       res.status(400).send( { status: 'ERROR', error_message: 'ID attribute is missing.' } )
     }
     else {
-      cQuery = `update portalbi.tb_${req.query.tablename.toLowerCase()} set ${cFields} where id = ${nIDItem};`
-      responseSQL = await db.query( cQuery, aParamsUpdate );
+      cQuery = `update portalbi.tb_${req.query.tablename.toLowerCase()} set ${cFields} where id = $${nSeqField + 1};`
+      
+      // Adiciona o ID como o último parâmetro
+      aParamsUpdate.push(nIDItem);
 
-      if (req.query.tablename.toLowerCase() === 'workspace') {
-
-        if (req.body.active === false || req.body.active === 'false') {
-            try {
-
-              await db.query(
-                `UPDATE portalbi.tb_report SET active = false, last_update = now() WHERE workspace_id = $1`, 
-                [nIDItem]
-              );
-              console.log(`[System] Workspace ${nIDItem} inativado: Relatórios vinculados foram inativados em cascata.`);
-            } catch (error) {
-              console.error('[System] Erro ao inativar relatórios em cascata:', error);
+      try {
+        responseSQL = await db.query( cQuery, aParamsUpdate );
+        
+        // Lógica específica de Workspace (Mantida do original)
+        if (req.query.tablename.toLowerCase() === 'workspace') {
+            if (req.body.active === false || req.body.active === 'false') {
+                try {
+                  await db.query(
+                    `UPDATE portalbi.tb_report SET active = false, last_update = now() WHERE workspace_id = $1`, 
+                    [nIDItem]
+                  );
+                } catch (error) {
+                  console.error('[System] Erro ao inativar relatórios em cascata:', error);
+                }
             }
         }
-      }
 
-      if (responseSQL.rowCount <= 0) {
-        res.status(200).send( { status: 'ERROR', id: nIDItem, message: `ID ${nIDItem} not found.` } );  
-      }
-      else if (responseSQL.rowCount > 0) {
-        res.status(200).send( { status: 'SUCCESS', id: nIDItem, message: `ID ${nIDItem} was updated.` } );  
-      }
-      else {
-        res.status(500).send( { status: 'ERROR', error_message: 'Internal error.' } );
+        if (responseSQL.rowCount <= 0) {
+            res.status(200).send( { status: 'ERROR', id: nIDItem, message: `ID ${nIDItem} not found.` } );  
+        }
+        else {
+            res.status(200).send( { status: 'SUCCESS', id: nIDItem, message: `ID ${nIDItem} was updated.` } );  
+        }
+
+      } catch (err) {
+          console.error("Erro no Update:", err);
+          res.status(500).send( { status: 'ERROR', error_message: 'Database error on update.' } );
       }
     }
 

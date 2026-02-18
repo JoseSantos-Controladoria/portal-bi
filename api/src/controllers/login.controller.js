@@ -2,6 +2,7 @@ const db = require('../config/database.js');
 const params = require('../config/params.js');
 const crypto = require('crypto');
 const emailService = require('../services/email.service');
+const jwt = require('jsonwebtoken');
 
 async function getNextID() {
   try {
@@ -57,13 +58,22 @@ exports.login = async (req, res) => {
 
   if (loginOK) {
 
-    let sessionToken = crypto.randomBytes(32).toString('hex');
+    const userPayload = {
+      id: usuario.id,
+      name: usuario.name,
+      email: usuario.email,
+      company_id: usuario.company_id,
+      profile_id: usuario.profile_id
+    };
+
+    const secret = process.env.JWT_SECRET || 'SEGREDO_TEMPORARIO_DEV';
+    const sessionToken = jwt.sign(userPayload, secret, { expiresIn: '1h' });
 
     try {
       const nextId = await getNextID();
 
       await db.query(
-        `INSERT INTO portalbi.tb_api_access_control (id, api_token) VALUES ($1, $2)`,
+        `INSERT INTO portalbi.tb_api_access_control (id, api_token, active, created_at) VALUES ($1, $2, true, NOW())`,
         [nextId, sessionToken]
       );
 
@@ -104,7 +114,6 @@ exports.forgotPassword = async (req, res) => {
 
     if (userRes.rowCount > 0) {
       const user = userRes.rows[0];
-
       const newPassword = crypto.randomBytes(4).toString('hex');
 
       await db.query(

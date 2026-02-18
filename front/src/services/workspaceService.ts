@@ -4,7 +4,7 @@ export interface Workspace {
   id: number;
   name: string;
   url: string;
-  active: boolean; // Adicionado para suportar o soft delete
+  active: boolean; 
   last_update?: string;
 }
 
@@ -24,7 +24,7 @@ export const workspaceService = {
       if (data.id) {
         await crudService.update('workspace', data.id, data);
       } else {
-        // Novos workspaces nascem ativos
+
         await crudService.create('workspace', { ...data, active: true });
       }
     } catch (error) {
@@ -33,12 +33,11 @@ export const workspaceService = {
     }
   },
 
-  // MUDANÇA: Soft Delete (Inativação)
+
   delete: async (id: number) => {
     return await crudService.update('workspace', id, { active: false });
   },
 
-  // NOVO: Reativar
   reactivate: async (id: number) => {
     return await crudService.update('workspace', id, { active: true });
   }

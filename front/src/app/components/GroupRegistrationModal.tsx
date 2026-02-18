@@ -34,7 +34,7 @@ import { toast } from "sonner";
 
 interface GroupRegistrationModalProps {
   isOpen: boolean;
-  onOpenChange: (open: boolean) => void; // CORREÇÃO: Usamos o padrão do Shadcn
+  onOpenChange: (open: boolean) => void; 
   groupIdToEdit?: number | null; 
   onSuccess?: () => void;
 }
@@ -81,11 +81,14 @@ export function GroupRegistrationModal({ isOpen, onOpenChange, groupIdToEdit, on
             active: group.active !== false
         });
 
-        const members = await groupService.getUsersByGroup(groupIdToEdit);
-        if (members && Array.isArray(members)) {
-             const memberIds = members.map((m: any) => m.user_id || m.id);
+           const members = await groupService.getUsersByGroup(groupIdToEdit);
+           if (members && Array.isArray(members)) {
+             const memberIds = members
+             .filter((m: any) => m.user_associated === true)
+             .map((m: any) => m.user_id || m.id);
+             
              setSelectedUsers(memberIds);
-        }
+           }
       }
 
     } catch (error) {
@@ -96,12 +99,10 @@ export function GroupRegistrationModal({ isOpen, onOpenChange, groupIdToEdit, on
     }
   };
 
-  // Lógica: Atualizar nome ao selecionar cliente
   const handleCustomerChange = (customerId: string) => {
     const selectedCustomer = customersList.find(c => String(c.id) === customerId);
     let newName = formData.name;
 
-    // Se estiver criando um novo, aplica o prefixo
     if (!groupIdToEdit && selectedCustomer) {
         const prefix = `${selectedCustomer.name.toUpperCase()} - `;
         if (!newName.startsWith(prefix)) {
@@ -134,7 +135,6 @@ export function GroupRegistrationModal({ isOpen, onOpenChange, groupIdToEdit, on
       toast.success(groupIdToEdit ? "Grupo atualizado!" : "Grupo criado com sucesso!");
       if (onSuccess) onSuccess();
       
-      // CORREÇÃO: Chama a função correta para fechar
       onOpenChange(false); 
       
     } catch (error) {
@@ -159,7 +159,7 @@ export function GroupRegistrationModal({ isOpen, onOpenChange, groupIdToEdit, on
   const isNameDisabled = !formData.customer_id && !groupIdToEdit;
 
   return (
-    // CORREÇÃO: Passamos onOpenChange diretamente para o Dialog
+
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[900px] bg-white overflow-hidden max-h-[90vh] flex flex-col">
         <DialogHeader className="px-2">

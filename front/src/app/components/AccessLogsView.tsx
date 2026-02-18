@@ -198,7 +198,6 @@ export function AccessLogsView() {
           </TableBody>
         </Table>
 
-        {/* --- PAGINAÇÃO --- */}
         {!isLoading && filteredLogs.length > 0 && (
           <div className="p-4 border-t border-slate-200 bg-slate-50 flex justify-center">
             <Pagination>
@@ -215,11 +214,7 @@ export function AccessLogsView() {
                   />
                 </PaginationItem>
 
-                {/* Mostra números de página (limitado a 5 para não quebrar layout se tiver muitas) */}
                 {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
-                    // Lógica simples: mostra os primeiros 5. 
-                    // Para logs (que podem ser milhares), o ideal seria uma lógica de "Janela" (1 ... 4 5 6 ... 99)
-                    // Mas vamos manter simples igual aos outros por enquanto.
                     const pageNum = i + 1;
                     return (
                       <PaginationItem key={pageNum}>

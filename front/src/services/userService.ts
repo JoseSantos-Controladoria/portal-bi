@@ -77,9 +77,18 @@ export const userService = {
 
     try {
       if (userId) {
-        await crudService.update('user', userId, userData);
+
+        const dataToUpdate = { ...userData };
+
+        if (!dataToUpdate.password || dataToUpdate.password.trim() === '') {
+            delete (dataToUpdate as Partial<User>).password;
+        }
+
+        await crudService.update('user', userId, dataToUpdate);
+
       } else {
-        const payload = { ...userData, password: userData.password || '123456' };
+
+        const payload = { ...userData, password: userData.password || 'Work@2026' };
         const res = await crudService.create('user', payload);
         userId = res.id;
       }

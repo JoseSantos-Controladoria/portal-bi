@@ -103,6 +103,25 @@ export function UserRegistrationModal({ isOpen, onClose, userIdToEdit, onSuccess
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!formData.name || formData.name.trim() === "") {
+      toast.warning("Por favor, informe o Nome Completo.");
+      return;
+    }
+    if (!formData.email || formData.email.trim() === "") {
+      toast.warning("Por favor, informe o E-mail.");
+      return;
+    }
+    if (!formData.company_id || formData.company_id === "") {
+      toast.warning("A seleção da EMPRESA é obrigatória.");
+      return;
+    }
+    if (!formData.profile_id || formData.profile_id === "") {
+      toast.warning("A seleção do PERFIL é obrigatória.");
+      return;
+    }
+
+
     if (!userIdToEdit) {
       if (formData.password !== confirmPassword) {
         toast.error("A confirmação de senha não confere.");
@@ -113,6 +132,7 @@ export function UserRegistrationModal({ isOpen, onClose, userIdToEdit, onSuccess
         return;
       }
     }
+
     setIsLoading(true);
     try {
       await userService.save({
@@ -129,7 +149,7 @@ export function UserRegistrationModal({ isOpen, onClose, userIdToEdit, onSuccess
       onClose();
     } catch (error) {
       console.error(error);
-      toast.error("Erro ao salvar usuário.");
+      toast.error("Erro ao salvar usuário. Verifique se o e-mail já existe.");
     } finally {
       setIsLoading(false);
     }
@@ -168,7 +188,7 @@ export function UserRegistrationModal({ isOpen, onClose, userIdToEdit, onSuccess
                       <div className="space-y-2">
                         <Label htmlFor="name" className="text-slate-600">Nome Completo</Label>
                         <Input 
-                          id="name" placeholder="Ex: João da Silva" required className="h-11"
+                          id="name" placeholder="" required className="h-11"
                           value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})}
                         />
                       </div>
@@ -177,7 +197,7 @@ export function UserRegistrationModal({ isOpen, onClose, userIdToEdit, onSuccess
                         <div className="relative">
                           <Mail className="absolute left-3 top-3.5 h-5 w-5 text-slate-400" />
                           <Input 
-                            id="email" type="email" className="pl-10 h-11" placeholder="joao@empresa.com" required
+                            id="email" type="email" className="pl-10 h-11" placeholder="" required
                             value={formData.email} onChange={(e) => setFormData({...formData, email: e.target.value})}
                           />
                         </div>
